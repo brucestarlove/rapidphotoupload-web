@@ -56,7 +56,7 @@ export function Header() {
             ref={fileInputRef}
             type="file"
             multiple
-            accept="image/*"
+            accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
             onChange={handleFileChange}
             className="hidden"
           />

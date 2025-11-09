@@ -1,5 +1,7 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useCallback } from "react";
 import { getPhotos, getPhoto, getDownloadUrl } from "@/lib/api/photos";
+import { isConnectionError } from "@/lib/utils/errors";
 
 export function usePhotos(params?: { page?: number; size?: number; tag?: string; status?: string }) {
   return useQuery({
@@ -8,7 +10,11 @@ export function usePhotos(params?: { page?: number; size?: number; tag?: string;
       try {
         return await getPhotos(params);
       } catch (error) {
-        // Return empty result if API fails (e.g., endpoint doesn't exist yet)
+        // Re-throw connection errors so they can be handled in the UI
+        if (isConnectionError(error)) {
+          throw error;
+        }
+        // Return empty result for other API errors (e.g., endpoint doesn't exist yet)
         console.warn("Failed to fetch photos:", error);
         return {
           items: [],
@@ -46,12 +52,12 @@ export function useDownloadUrl(photoId: string | null) {
 export function usePrefetchDownloadUrl() {
   const queryClient = useQueryClient();
   
-  return (photoId: string) => {
+  return useCallback((photoId: string) => {
     queryClient.prefetchQuery({
       queryKey: ["downloadUrl", photoId],
       queryFn: () => getDownloadUrl(photoId),
       staleTime: 14 * 60 * 1000,
     });
-  };
+  }, [queryClient]);
 }
 

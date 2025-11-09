@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useCallback } from "react";
 import Image from "next/image";
 import {
   Dialog,
@@ -23,13 +23,10 @@ interface PhotoViewerProps {
 
 export function PhotoViewer({ photoId, open, onClose }: PhotoViewerProps) {
   const { data: photo, isLoading } = usePhoto(photoId || null);
-  // Use React Query hook to fetch download URL (will use cached value if prefetched)
+  // Fetch download URL for both download button and as fallback for display
   const { data: downloadData, isLoading: isLoadingDownloadUrl } = useDownloadUrl(
     open && photoId ? photoId : null
   );
-
-  // Get full image URL from download data (prefetched or fetched on demand)
-  const fullImageUrl = downloadData?.url || null;
 
   // Handle ESC key
   useEffect(() => {
@@ -45,10 +42,18 @@ export function PhotoViewer({ photoId, open, onClose }: PhotoViewerProps) {
     }
   }, [open, onClose]);
 
-  // Use full image URL if available, otherwise fall back to thumbnails from photo metadata
-  const imageUrl = fullImageUrl || photo?.fullImageUrl || photo?.thumbnailUrl1024 || photo?.thumbnailUrl || null;
+  // Use view URLs from photo metadata first, then fall back to download URL
+  // Priority: fullImageUrl > thumbnailUrl1024 > thumbnailUrl > downloadUrl
+  // Note: downloadUrl has attachment disposition but will still display the image
+  const imageUrl = 
+    photo?.fullImageUrl || 
+    photo?.thumbnailUrl1024 || 
+    photo?.thumbnailUrl || 
+    downloadData?.url || 
+    null;
 
-  const handleDownload = () => {
+  // Memoize download handler to prevent unnecessary re-renders
+  const handleDownload = useCallback(() => {
     if (!downloadData?.url) return;
     // Create a temporary link to trigger download
     const link = document.createElement("a");
@@ -57,7 +62,7 @@ export function PhotoViewer({ photoId, open, onClose }: PhotoViewerProps) {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-  };
+  }, [downloadData, photo?.filename]);
 
   return (
     <Dialog open={open} onOpenChange={onClose}>

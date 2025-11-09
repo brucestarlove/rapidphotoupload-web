@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { PhotoGrid } from "@/components/photos/PhotoGrid";
 import { PhotoViewer } from "@/components/photos/PhotoViewer";
 import type { PhotoSummary } from "@/types/domain";
@@ -8,13 +8,14 @@ import type { PhotoSummary } from "@/types/domain";
 export default function DashboardPage() {
   const [selectedPhotoId, setSelectedPhotoId] = useState<string | null>(null);
 
-  const handlePhotoClick = (photo: PhotoSummary) => {
+  // Memoize handlers to prevent unnecessary re-renders of child components
+  const handlePhotoClick = useCallback((photo: PhotoSummary) => {
     setSelectedPhotoId(photo.photoId);
-  };
+  }, []);
 
-  const handleCloseViewer = () => {
+  const handleCloseViewer = useCallback(() => {
     setSelectedPhotoId(null);
-  };
+  }, []);
 
   return (
     <div className="space-y-6">

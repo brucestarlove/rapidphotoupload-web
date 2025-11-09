@@ -6,6 +6,33 @@ import { toast } from "sonner";
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 
+// Allowed image MIME types
+const ALLOWED_IMAGE_TYPES: readonly string[] = [
+  "image/jpeg",
+  "image/jpg",
+  "image/png",
+  "image/gif",
+  "image/webp",
+];
+
+// Allowed image file extensions (case-insensitive)
+const ALLOWED_EXTENSIONS: readonly string[] = [".jpg", ".jpeg", ".png", ".gif", ".webp"];
+
+/**
+ * Check if a file is an allowed image type
+ */
+function isValidImageType(file: File): boolean {
+  // Check MIME type first
+  const mimeType = file.type.toLowerCase();
+  if (ALLOWED_IMAGE_TYPES.includes(mimeType)) {
+    return true;
+  }
+
+  // Fallback: check file extension (MIME types can be unreliable)
+  const fileName = file.name.toLowerCase();
+  return ALLOWED_EXTENSIONS.some((ext) => fileName.endsWith(ext));
+}
+
 export function useUpload() {
   const { addUpload, updateUpload, removeUpload } = useUploadStore();
 
@@ -18,8 +45,10 @@ export function useUpload() {
             toast.error(`File ${file.name} is too large (max 5MB)`);
             return false;
           }
-          if (!file.type.startsWith("image/")) {
-            toast.error(`File ${file.name} is not an image`);
+          if (!isValidImageType(file)) {
+            toast.error(
+              `File ${file.name} is not a supported image type. Allowed types: JPG, JPEG, PNG, GIF, WEBP`
+            );
             return false;
           }
           return true;

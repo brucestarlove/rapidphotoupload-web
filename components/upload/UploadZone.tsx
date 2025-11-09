@@ -66,7 +66,7 @@ export function UploadZone() {
             id="file-upload"
             type="file"
             multiple
-            accept="image/*"
+            accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
             onChange={handleFileInput}
             className="hidden"
           />

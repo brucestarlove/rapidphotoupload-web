@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, memo } from "react";
 import Image from "next/image";
 import type { PhotoSummary } from "@/types/domain";
 import { Card } from "@/components/ui/card";
@@ -15,23 +15,13 @@ interface PhotoCardProps {
   onClick: () => void;
 }
 
-export function PhotoCard({ photo, onClick }: PhotoCardProps) {
+export const PhotoCard = memo(function PhotoCard({ photo, onClick }: PhotoCardProps) {
   const [imageError, setImageError] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   const prefetchDownloadUrl = usePrefetchDownloadUrl();
 
   // Use presigned thumbnail URL directly from API response - no additional API calls needed
   const thumbnailUrl = photo.thumbnailUrl || null;
-
-  // Debug logging
-  useEffect(() => {
-    console.log('PhotoCard:', {
-      photoId: photo.photoId,
-      filename: photo.filename,
-      thumbnailUrl,
-      hasError: imageError
-    });
-  }, [photo.photoId, photo.filename, thumbnailUrl, imageError]);
 
   // Prefetch full-size image URL on hover for better UX
   useEffect(() => {
@@ -41,10 +31,36 @@ export function PhotoCard({ photo, onClick }: PhotoCardProps) {
     }
   }, [isHovered, photo.photoId, photo.status, prefetchDownloadUrl]);
 
-  // Handle image load error - just mark as error
-  const handleImageError = () => {
+  // Handle image load error - memoized to prevent unnecessary re-renders
+  const handleImageError = useCallback(() => {
     setImageError(true);
-  };
+  }, []);
+
+  // Handle download - memoized to prevent unnecessary re-renders
+  const handleDownload = useCallback(async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    try {
+      const { getDownloadUrl } = await import("@/lib/api/photos");
+      const downloadData = await getDownloadUrl(photo.photoId);
+      if (downloadData.url) {
+        // Create a temporary link to trigger download
+        const link = document.createElement("a");
+        link.href = downloadData.url;
+        link.download = photo.filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }
+    } catch (error) {
+      console.error("Failed to download photo:", error);
+    }
+  }, [photo.photoId, photo.filename]);
+
+  // Handle view click - memoized to prevent unnecessary re-renders
+  const handleViewClick = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+    onClick();
+  }, [onClick]);
 
   return (
     <Card
@@ -81,33 +97,13 @@ export function PhotoCard({ photo, onClick }: PhotoCardProps) {
           <div className="absolute inset-0 bg-black/60 flex items-center justify-center gap-4 transition-opacity">
             <button
               className="rounded-full bg-primary p-3 text-primary-foreground hover:bg-primary/90"
-              onClick={(e) => {
-                e.stopPropagation();
-                onClick();
-              }}
+              onClick={handleViewClick}
             >
               <Eye className="h-5 w-5" />
             </button>
             <button
               className="rounded-full bg-card p-3 text-card-foreground hover:bg-card/90"
-              onClick={async (e) => {
-                e.stopPropagation();
-                try {
-                  const { getDownloadUrl } = await import("@/lib/api/photos");
-                  const downloadData = await getDownloadUrl(photo.photoId);
-                  if (downloadData.url) {
-                    // Create a temporary link to trigger download
-                    const link = document.createElement("a");
-                    link.href = downloadData.url;
-                    link.download = photo.filename;
-                    document.body.appendChild(link);
-                    link.click();
-                    document.body.removeChild(link);
-                  }
-                } catch (error) {
-                  console.error("Failed to download photo:", error);
-                }
-              }}
+              onClick={handleDownload}
               title="Download"
             >
               <Download className="h-5 w-5" />
@@ -144,5 +140,5 @@ export function PhotoCard({ photo, onClick }: PhotoCardProps) {
       </div>
     </Card>
   );
-}
+});
 
