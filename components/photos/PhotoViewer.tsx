@@ -66,8 +66,8 @@ export function PhotoViewer({ photoId, open, onClose }: PhotoViewerProps) {
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-7xl p-0">
-        <div className="flex h-[90vh] flex-col">
+      <DialogContent className="max-w-7xl p-0" showCloseButton={false}>
+        <div className="flex max-h-[90vh] flex-col">
           {/* Header */}
           <DialogHeader className="border-b border-border p-4">
             <div className="flex items-center justify-between">
@@ -93,23 +93,23 @@ export function PhotoViewer({ photoId, open, onClose }: PhotoViewerProps) {
           </DialogHeader>
 
           {/* Image */}
-          <div className="relative flex-1 overflow-auto bg-muted p-4">
+          <div className="relative overflow-auto bg-muted p-4">
             {isLoading || isLoadingDownloadUrl ? (
-              <Skeleton className="mx-auto h-full max-h-[calc(90vh-8rem)] w-full max-w-5xl" />
+              <Skeleton className="mx-auto h-96 w-full max-w-5xl" />
             ) : imageUrl ? (
-              <div className="flex h-full items-center justify-center">
+              <div className="flex items-center justify-center">
                 <Image
                   src={imageUrl}
                   alt={photo?.filename || "Photo"}
                   width={photo?.width || 1920}
                   height={photo?.height || 1080}
-                  className="max-h-[calc(90vh-8rem)] w-auto object-contain"
+                  className="max-h-[calc(90vh-12rem)] w-auto object-contain"
                   unoptimized
                   priority // Load eagerly since it's in a modal/viewer
                 />
               </div>
             ) : (
-              <div className="flex h-full items-center justify-center">
+              <div className="flex h-96 items-center justify-center">
                 <p className="text-muted-foreground">No image available</p>
               </div>
             )}
