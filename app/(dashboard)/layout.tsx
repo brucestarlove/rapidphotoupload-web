@@ -3,8 +3,10 @@
 import { useEffect, useState } from "react";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { Header } from "@/components/layout/Header";
+import { UploadProgressPanel } from "@/components/layout/UploadProgressPanel";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { useAuthStore } from "@/stores/authStore";
+import { useUploadWebSocket } from "@/hooks/useUploadWebSocket";
 import { useRouter } from "next/navigation";
 
 export default function DashboardLayout({
@@ -15,6 +17,9 @@ export default function DashboardLayout({
   const { checkAuth, isAuthenticated } = useAuthStore();
   const router = useRouter();
   const [isChecking, setIsChecking] = useState(true);
+  
+  // Manage WebSocket subscriptions for upload jobs
+  useUploadWebSocket();
 
   useEffect(() => {
     checkAuth();
@@ -48,6 +53,7 @@ export default function DashboardLayout({
           <main className="flex-1 p-6">{children}</main>
         </div>
       </div>
+      <UploadProgressPanel />
     </ErrorBoundary>
   );
 }

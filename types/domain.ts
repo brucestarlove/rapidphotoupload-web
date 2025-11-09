@@ -42,6 +42,7 @@ export interface UploadJob {
 export interface UploadFile {
   file: File;
   photoId?: string;
+  jobId?: string;
   status: PhotoStatus;
   progress: number;
   error?: string;

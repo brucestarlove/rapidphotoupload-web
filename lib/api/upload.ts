@@ -1,5 +1,11 @@
 import apiClient from "./client";
-import type { CreateUploadJobRequest, CreateUploadJobResponse, UpdateProgressRequest } from "@/types/api";
+import type {
+  CreateUploadJobRequest,
+  CreateUploadJobResponse,
+  UpdateProgressRequest,
+  FinalizeMultipartUploadRequest,
+  JobStatusResponse,
+} from "@/types/api";
 
 /**
  * Create upload job
@@ -19,5 +25,25 @@ export async function updateProgress(data: UpdateProgressRequest): Promise<void>
     // Best-effort, don't throw error
     console.warn("Failed to update progress:", error);
   }
+}
+
+/**
+ * Finalize multipart upload
+ */
+export async function finalizeMultipartUpload(
+  photoId: string,
+  data: FinalizeMultipartUploadRequest
+): Promise<void> {
+  const response = await apiClient.post(`/commands/upload/${photoId}/finalize`, data);
+  // Backend returns 204 No Content, so no data to return
+  return;
+}
+
+/**
+ * Get job status (for polling fallback)
+ */
+export async function getJobStatus(jobId: string): Promise<JobStatusResponse> {
+  const response = await apiClient.get<JobStatusResponse>(`/queries/upload-jobs/${jobId}`);
+  return response.data;
 }
 
