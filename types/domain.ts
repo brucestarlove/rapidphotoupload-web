@@ -10,9 +10,10 @@ export interface PhotoSummary {
   width?: number;
   height?: number;
   status: PhotoStatus;
+  thumbnailUrl?: string | null; // Presigned thumbnail URL (256px)
   createdAt: string;
   completedAt?: string;
-  tags: string[];
+  tags?: string[];
 }
 
 export interface Photo extends PhotoSummary {

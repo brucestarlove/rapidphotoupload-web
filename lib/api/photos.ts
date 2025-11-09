@@ -8,15 +8,22 @@ export async function getPhotos(params?: {
   page?: number;
   size?: number;
   tag?: string;
+  status?: string;
 }): Promise<PhotoListResponse> {
-  const response = await apiClient.get<PhotoListResponse>("/queries/photos", { params });
+  const response = await apiClient.get<PhotoListResponse>("/queries/photos", { 
+    params: {
+      ...params,
+      status: params?.status || "COMPLETED", // Default to COMPLETED status
+    }
+  });
   // Ensure response has the expected structure
   const data = response.data;
   return {
-    photos: data?.photos || [],
-    total: data?.total || 0,
-    page: data?.page || 0,
-    size: data?.size || 50,
+    items: data?.items || [],
+    page: data?.page ?? 0,
+    size: data?.size ?? 50,
+    totalElements: data?.totalElements ?? 0,
+    totalPages: data?.totalPages ?? 0,
   };
 }
 

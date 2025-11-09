@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { getPhotos, getPhoto } from "@/lib/api/photos";
 
-export function usePhotos(params?: { page?: number; size?: number; tag?: string }) {
+export function usePhotos(params?: { page?: number; size?: number; tag?: string; status?: string }) {
   return useQuery({
     queryKey: ["photos", params],
     queryFn: async () => {
@@ -11,10 +11,11 @@ export function usePhotos(params?: { page?: number; size?: number; tag?: string 
         // Return empty result if API fails (e.g., endpoint doesn't exist yet)
         console.warn("Failed to fetch photos:", error);
         return {
-          photos: [],
-          total: 0,
-          page: params?.page || 0,
-          size: params?.size || 50,
+          items: [],
+          page: params?.page ?? 0,
+          size: params?.size ?? 50,
+          totalElements: 0,
+          totalPages: 0,
         };
       }
     },

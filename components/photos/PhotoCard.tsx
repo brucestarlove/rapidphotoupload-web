@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { formatFileSize, formatRelativeTime, truncate } from "@/lib/utils/format";
 import { cn } from "@/lib/utils";
 import { Eye, Download } from "lucide-react";
+import { getDownloadUrl } from "@/lib/api/photos";
 
 interface PhotoCardProps {
   photo: PhotoSummary;
@@ -16,12 +17,25 @@ interface PhotoCardProps {
 
 export function PhotoCard({ photo, onClick }: PhotoCardProps) {
   const [imageError, setImageError] = useState(false);
+  const [imageUrl, setImageUrl] = useState<string | null>(photo.thumbnailUrl || null);
   const [isHovered, setIsHovered] = useState(false);
 
-  // Generate thumbnail URL (placeholder - will use presigned URL in Phase 2)
-  const thumbnailUrl = photo.photoId
-    ? `/api/photos/${photo.photoId}/thumbnail`
-    : "/placeholder-image.jpg";
+  // Handle image load error - fallback to download URL
+  const handleImageError = async () => {
+    if (imageError) return; // Already tried fallback
+    setImageError(true);
+    
+    // Try to fetch the full image download URL as fallback
+    try {
+      const downloadData = await getDownloadUrl(photo.photoId);
+      if (downloadData.url) {
+        setImageUrl(downloadData.url);
+        setImageError(false); // Reset error state to try again
+      }
+    } catch (error) {
+      console.warn("Failed to fetch download URL for photo:", photo.photoId, error);
+    }
+  };
 
   return (
     <Card
@@ -31,18 +45,25 @@ export function PhotoCard({ photo, onClick }: PhotoCardProps) {
       onClick={onClick}
     >
       <div className="aspect-square relative bg-muted">
-        {!imageError ? (
+        {imageUrl ? (
           <Image
-            src={thumbnailUrl}
+            src={imageUrl}
             alt={photo.filename}
             fill
             className="object-cover"
-            onError={() => setImageError(true)}
+            onError={handleImageError}
             loading="lazy"
+            unoptimized // Presigned URLs are already optimized
           />
         ) : (
           <div className="flex h-full items-center justify-center">
-            <span className="text-muted-foreground">No preview</span>
+            <span className="text-muted-foreground">
+              {photo.status === "PROCESSING" || photo.status === "UPLOADING" 
+                ? "Processing..." 
+                : photo.status === "FAILED"
+                ? "Failed"
+                : "No preview"}
+            </span>
           </div>
         )}
 

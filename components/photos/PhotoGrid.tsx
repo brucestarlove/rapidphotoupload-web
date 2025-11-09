@@ -35,7 +35,7 @@ export function PhotoGrid({ onPhotoClick }: PhotoGridProps) {
     );
   }
 
-  if (!data || !data.photos || data.photos.length === 0) {
+  if (!data || !data.items || data.items.length === 0) {
     return (
       <div className="space-y-6">
         <UploadZone />
@@ -53,7 +53,7 @@ export function PhotoGrid({ onPhotoClick }: PhotoGridProps) {
     <div className="space-y-6">
       <UploadZone />
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
-        {data.photos.map((photo) => (
+        {data.items.map((photo) => (
           <PhotoCard key={photo.photoId} photo={photo} onClick={() => onPhotoClick(photo)} />
         ))}
       </div>

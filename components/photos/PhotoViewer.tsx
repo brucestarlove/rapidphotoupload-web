@@ -38,8 +38,8 @@ export function PhotoViewer({ photoId, open, onClose }: PhotoViewerProps) {
     }
   }, [open, onClose]);
 
-  // Generate image URL (placeholder - will use presigned URL in Phase 2)
-  const imageUrl = photoId ? `/api/photos/${photoId}/full` : null;
+  // Use presigned URL from API response, prefer 1024px thumbnail or full image URL
+  const imageUrl = photo?.fullImageUrl || photo?.thumbnailUrl1024 || photo?.thumbnailUrl || null;
 
   return (
     <Dialog open={open} onOpenChange={onClose}>

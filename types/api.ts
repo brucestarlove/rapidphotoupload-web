@@ -52,10 +52,11 @@ export interface UpdateProgressRequest {
 }
 
 export interface PhotoListResponse {
-  photos: Array<PhotoSummary>;
-  total: number;
+  items: Array<PhotoSummary>;
   page: number;
   size: number;
+  totalElements: number;
+  totalPages: number;
 }
 
 export interface PhotoMetadataResponse {
@@ -66,11 +67,14 @@ export interface PhotoMetadataResponse {
   width?: number;
   height?: number;
   s3Key: string;
+  thumbnailUrl?: string | null; // 256px thumbnail
+  thumbnailUrl1024?: string | null; // 1024px thumbnail (if available)
+  fullImageUrl?: string | null; // Full size image URL (if available)
   exifJson?: Record<string, any>;
   status: string;
   createdAt: string;
   completedAt?: string;
-  tags: string[];
+  tags?: string[];
 }
 
 export interface DownloadUrlResponse {
