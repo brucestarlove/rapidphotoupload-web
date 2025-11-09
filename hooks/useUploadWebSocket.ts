@@ -22,8 +22,24 @@ export function useUploadWebSocket() {
 
   // Handle job status updates
   const handleJobStatusUpdate = useCallback((update: JobStatusUpdate) => {
-    // Invalidate photos query when job completes to refresh the list
+    console.log("[useUploadWebSocket] Received JobStatusUpdate:", update);
+    
+    // When job completes, update all photos in the job to COMPLETED status
     if (update.status === "COMPLETED") {
+      console.log("[useUploadWebSocket] Job completed, updating photos for job:", update.jobId);
+      const { getJobPhotoIds, updateFileStatus, updateFileProgress } = useUploadStore.getState();
+      const photoIds = getJobPhotoIds(update.jobId);
+      
+      console.log("[useUploadWebSocket] Found photoIds:", photoIds);
+      
+      // Update all photos in this job to COMPLETED status with 100% progress
+      photoIds.forEach((photoId) => {
+        console.log("[useUploadWebSocket] Updating photo:", photoId, "to COMPLETED");
+        updateFileProgress(photoId, 100);
+        updateFileStatus(photoId, "COMPLETED");
+      });
+      
+      // Invalidate photos query to refresh the list
       queryClient.invalidateQueries({ queryKey: ["photos"] });
     }
   }, [queryClient]);
@@ -47,7 +63,9 @@ export function useUploadWebSocket() {
       // Subscribe to each job
       jobIds.forEach((jobId) => {
         if (!subscriptions.has(jobId)) {
+          console.log("[useUploadWebSocket] Subscribing to job:", jobId);
           const unsubscribe = webSocketClient.subscribeToJob(jobId, (message) => {
+            console.log("[useUploadWebSocket] Received message type:", message.type, "for job:", jobId);
             if (message.type === "ProgressUpdate") {
               handleProgressUpdate(message.data as ProgressUpdate);
             } else if (message.type === "JobStatusUpdate") {

@@ -169,6 +169,11 @@ class WebSocketClient {
       try {
         const data = JSON.parse(message.body);
         
+        // Log received message for debugging
+        if (process.env.NODE_ENV === "development") {
+          console.log("[WebSocket] Received message on", topic, ":", data);
+        }
+        
         // Determine message type based on structure
         let type: "ProgressUpdate" | "JobStatusUpdate";
         if (data.photoId) {
@@ -178,6 +183,10 @@ class WebSocketClient {
         } else {
           console.warn("[WebSocket] Unknown message type:", data);
           return;
+        }
+
+        if (process.env.NODE_ENV === "development") {
+          console.log("[WebSocket] Classified as:", type);
         }
 
         handler({ type, data });

@@ -3,7 +3,7 @@ import { useCallback } from "react";
 import { getPhotos, getPhoto, getDownloadUrl } from "@/lib/api/photos";
 import { isConnectionError } from "@/lib/utils/errors";
 
-export function usePhotos(params?: { page?: number; size?: number; tag?: string; status?: string }) {
+export function usePhotos(params?: { page?: number; size?: number; tag?: string; status?: string; search?: string }) {
   return useQuery({
     queryKey: ["photos", params],
     queryFn: async () => {

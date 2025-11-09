@@ -12,10 +12,11 @@ import { usePrefetchDownloadUrl } from "@/hooks/usePhotos";
 
 interface PhotoCardProps {
   photo: PhotoSummary;
-  onClick: () => void;
+  onPhotoClick: () => void;
+  onViewPhoto: () => void;
 }
 
-export const PhotoCard = memo(function PhotoCard({ photo, onClick }: PhotoCardProps) {
+export const PhotoCard = memo(function PhotoCard({ photo, onPhotoClick, onViewPhoto }: PhotoCardProps) {
   const [imageError, setImageError] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   const prefetchDownloadUrl = usePrefetchDownloadUrl();
@@ -59,15 +60,15 @@ export const PhotoCard = memo(function PhotoCard({ photo, onClick }: PhotoCardPr
   // Handle view click - memoized to prevent unnecessary re-renders
   const handleViewClick = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
-    onClick();
-  }, [onClick]);
+    onViewPhoto();
+  }, [onViewPhoto]);
 
   return (
     <Card
       className="group relative overflow-hidden cursor-pointer transition-transform hover:scale-105"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      onClick={onClick}
+      onClick={onPhotoClick}
     >
       <div className="aspect-square relative bg-muted">
         {thumbnailUrl && !imageError ? (

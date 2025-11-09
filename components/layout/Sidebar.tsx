@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { Plus, Folder, Image, Clock, Trash2, ChevronLeft, ChevronRight } from "lucide-react";
+import { Plus, Folder, Trash2, ChevronLeft, ChevronRight } from "lucide-react";
 import { useUpload } from "@/hooks/useUpload";
 
 interface NavItem {
@@ -16,8 +16,6 @@ interface NavItem {
 
 const navItems: NavItem[] = [
   { label: "My Files", href: "/", icon: Folder },
-  { label: "Photos", href: "/photos", icon: Image },
-  { label: "Recent", href: "/recent", icon: Clock },
   { label: "Trash", href: "/trash", icon: Trash2 },
 ];
 

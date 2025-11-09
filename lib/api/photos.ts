@@ -9,6 +9,7 @@ export async function getPhotos(params?: {
   size?: number;
   tag?: string;
   status?: string;
+  search?: string;
 }): Promise<PhotoListResponse> {
   const response = await apiClient.get<PhotoListResponse>("/queries/photos", { 
     params: {

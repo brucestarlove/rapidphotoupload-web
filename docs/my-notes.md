@@ -1,0 +1,1 @@
+- [ ] check for duplicate file names when uploading
