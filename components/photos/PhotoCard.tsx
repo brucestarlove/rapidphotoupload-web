@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import type { PhotoSummary } from "@/types/domain";
 import { Card } from "@/components/ui/card";
@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { formatFileSize, formatRelativeTime, truncate } from "@/lib/utils/format";
 import { cn } from "@/lib/utils";
 import { Eye, Download } from "lucide-react";
-import { getDownloadUrl } from "@/lib/api/photos";
+import { usePrefetchDownloadUrl } from "@/hooks/usePhotos";
 
 interface PhotoCardProps {
   photo: PhotoSummary;
@@ -17,24 +17,33 @@ interface PhotoCardProps {
 
 export function PhotoCard({ photo, onClick }: PhotoCardProps) {
   const [imageError, setImageError] = useState(false);
-  const [imageUrl, setImageUrl] = useState<string | null>(photo.thumbnailUrl || null);
   const [isHovered, setIsHovered] = useState(false);
+  const prefetchDownloadUrl = usePrefetchDownloadUrl();
 
-  // Handle image load error - fallback to download URL
-  const handleImageError = async () => {
-    if (imageError) return; // Already tried fallback
-    setImageError(true);
-    
-    // Try to fetch the full image download URL as fallback
-    try {
-      const downloadData = await getDownloadUrl(photo.photoId);
-      if (downloadData.url) {
-        setImageUrl(downloadData.url);
-        setImageError(false); // Reset error state to try again
-      }
-    } catch (error) {
-      console.warn("Failed to fetch download URL for photo:", photo.photoId, error);
+  // Use presigned thumbnail URL directly from API response - no additional API calls needed
+  const thumbnailUrl = photo.thumbnailUrl || null;
+
+  // Debug logging
+  useEffect(() => {
+    console.log('PhotoCard:', {
+      photoId: photo.photoId,
+      filename: photo.filename,
+      thumbnailUrl,
+      hasError: imageError
+    });
+  }, [photo.photoId, photo.filename, thumbnailUrl, imageError]);
+
+  // Prefetch full-size image URL on hover for better UX
+  useEffect(() => {
+    if (isHovered && photo.status === "COMPLETED") {
+      // Prefetch the download URL using React Query (cached for reuse)
+      prefetchDownloadUrl(photo.photoId);
     }
+  }, [isHovered, photo.photoId, photo.status, prefetchDownloadUrl]);
+
+  // Handle image load error - just mark as error
+  const handleImageError = () => {
+    setImageError(true);
   };
 
   return (
@@ -45,9 +54,9 @@ export function PhotoCard({ photo, onClick }: PhotoCardProps) {
       onClick={onClick}
     >
       <div className="aspect-square relative bg-muted">
-        {imageUrl ? (
+        {thumbnailUrl && !imageError ? (
           <Image
-            src={imageUrl}
+            src={thumbnailUrl}
             alt={photo.filename}
             fill
             className="object-cover"
@@ -81,10 +90,25 @@ export function PhotoCard({ photo, onClick }: PhotoCardProps) {
             </button>
             <button
               className="rounded-full bg-card p-3 text-card-foreground hover:bg-card/90"
-              onClick={(e) => {
+              onClick={async (e) => {
                 e.stopPropagation();
-                // Download placeholder for Phase 3
+                try {
+                  const { getDownloadUrl } = await import("@/lib/api/photos");
+                  const downloadData = await getDownloadUrl(photo.photoId);
+                  if (downloadData.url) {
+                    // Create a temporary link to trigger download
+                    const link = document.createElement("a");
+                    link.href = downloadData.url;
+                    link.download = photo.filename;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                  }
+                } catch (error) {
+                  console.error("Failed to download photo:", error);
+                }
               }}
+              title="Download"
             >
               <Download className="h-5 w-5" />
             </button>

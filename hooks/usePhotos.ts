@@ -1,5 +1,5 @@
-import { useQuery } from "@tanstack/react-query";
-import { getPhotos, getPhoto } from "@/lib/api/photos";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { getPhotos, getPhoto, getDownloadUrl } from "@/lib/api/photos";
 
 export function usePhotos(params?: { page?: number; size?: number; tag?: string; status?: string }) {
   return useQuery({
@@ -29,5 +29,29 @@ export function usePhoto(photoId: string | null) {
     queryFn: () => (photoId ? getPhoto(photoId) : null),
     enabled: !!photoId,
   });
+}
+
+export function useDownloadUrl(photoId: string | null) {
+  return useQuery({
+    queryKey: ["downloadUrl", photoId],
+    queryFn: () => (photoId ? getDownloadUrl(photoId) : null),
+    enabled: !!photoId,
+    staleTime: 14 * 60 * 1000, // 14 minutes (URLs expire in 15 minutes)
+  });
+}
+
+/**
+ * Prefetch download URL for a photo (useful for hover prefetching)
+ */
+export function usePrefetchDownloadUrl() {
+  const queryClient = useQueryClient();
+  
+  return (photoId: string) => {
+    queryClient.prefetchQuery({
+      queryKey: ["downloadUrl", photoId],
+      queryFn: () => getDownloadUrl(photoId),
+      staleTime: 14 * 60 * 1000,
+    });
+  };
 }
 

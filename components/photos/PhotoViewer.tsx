@@ -10,8 +10,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { X } from "lucide-react";
-import { usePhoto } from "@/hooks/usePhotos";
+import { X, Download } from "lucide-react";
+import { usePhoto, useDownloadUrl } from "@/hooks/usePhotos";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatFileSize, formatDate } from "@/lib/utils/format";
 
@@ -23,6 +23,13 @@ interface PhotoViewerProps {
 
 export function PhotoViewer({ photoId, open, onClose }: PhotoViewerProps) {
   const { data: photo, isLoading } = usePhoto(photoId || null);
+  // Use React Query hook to fetch download URL (will use cached value if prefetched)
+  const { data: downloadData, isLoading: isLoadingDownloadUrl } = useDownloadUrl(
+    open && photoId ? photoId : null
+  );
+
+  // Get full image URL from download data (prefetched or fetched on demand)
+  const fullImageUrl = downloadData?.url || null;
 
   // Handle ESC key
   useEffect(() => {
@@ -38,8 +45,19 @@ export function PhotoViewer({ photoId, open, onClose }: PhotoViewerProps) {
     }
   }, [open, onClose]);
 
-  // Use presigned URL from API response, prefer 1024px thumbnail or full image URL
-  const imageUrl = photo?.fullImageUrl || photo?.thumbnailUrl1024 || photo?.thumbnailUrl || null;
+  // Use full image URL if available, otherwise fall back to thumbnails from photo metadata
+  const imageUrl = fullImageUrl || photo?.fullImageUrl || photo?.thumbnailUrl1024 || photo?.thumbnailUrl || null;
+
+  const handleDownload = () => {
+    if (!downloadData?.url) return;
+    // Create a temporary link to trigger download
+    const link = document.createElement("a");
+    link.href = downloadData.url;
+    link.download = photo?.filename || "photo";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
@@ -58,15 +76,20 @@ export function PhotoViewer({ photoId, open, onClose }: PhotoViewerProps) {
                   )}
                 </DialogDescription>
               </div>
-              <Button variant="ghost" size="icon" onClick={onClose}>
-                <X className="h-4 w-4" />
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button variant="ghost" size="icon" onClick={handleDownload} title="Download">
+                  <Download className="h-4 w-4" />
+                </Button>
+                <Button variant="ghost" size="icon" onClick={onClose}>
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
           </DialogHeader>
 
           {/* Image */}
           <div className="relative flex-1 overflow-auto bg-muted p-4">
-            {isLoading ? (
+            {isLoading || isLoadingDownloadUrl ? (
               <Skeleton className="mx-auto h-full max-h-[calc(90vh-8rem)] w-full max-w-5xl" />
             ) : imageUrl ? (
               <div className="flex h-full items-center justify-center">
@@ -77,6 +100,7 @@ export function PhotoViewer({ photoId, open, onClose }: PhotoViewerProps) {
                   height={photo?.height || 1080}
                   className="max-h-[calc(90vh-8rem)] w-auto object-contain"
                   unoptimized
+                  priority // Load eagerly since it's in a modal/viewer
                 />
               </div>
             ) : (
