@@ -5,45 +5,52 @@ import Image from "next/image";
 import type { PhotoSummary } from "@/types/domain";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { formatFileSize, formatRelativeTime, truncate } from "@/lib/utils/format";
-import { Eye, Download } from "lucide-react";
+import { Eye, Download, RotateCcw, Trash2 } from "lucide-react";
 import { usePrefetchDownloadUrl } from "@/hooks/usePhotos";
 
-interface PhotoCardProps {
+interface TrashPhotoCardProps {
   photo: PhotoSummary;
   onPhotoClick: () => void;
   onViewPhoto: () => void;
+  onRestore: () => void;
+  onPermanentDelete: () => void;
+  canPermanentDelete: boolean;
+  daysUntilDeletion: number | null;
 }
 
-export const PhotoCard = memo(function PhotoCard({ photo, onPhotoClick, onViewPhoto }: PhotoCardProps) {
+export const TrashPhotoCard = memo(function TrashPhotoCard({
+  photo,
+  onPhotoClick,
+  onViewPhoto,
+  onRestore,
+  onPermanentDelete,
+  canPermanentDelete,
+  daysUntilDeletion,
+}: TrashPhotoCardProps) {
   const [imageError, setImageError] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   const prefetchDownloadUrl = usePrefetchDownloadUrl();
 
-  // Use presigned thumbnail URL directly from API response - no additional API calls needed
   const thumbnailUrl = photo.thumbnailUrl || null;
 
-  // Prefetch full-size image URL on hover for better UX
   useEffect(() => {
     if (isHovered && photo.status === "COMPLETED") {
-      // Prefetch the download URL using React Query (cached for reuse)
       prefetchDownloadUrl(photo.photoId);
     }
   }, [isHovered, photo.photoId, photo.status, prefetchDownloadUrl]);
 
-  // Handle image load error - memoized to prevent unnecessary re-renders
   const handleImageError = useCallback(() => {
     setImageError(true);
   }, []);
 
-  // Handle download - memoized to prevent unnecessary re-renders
   const handleDownload = useCallback(async (e: React.MouseEvent) => {
     e.stopPropagation();
     try {
       const { getDownloadUrl } = await import("@/lib/api/photos");
       const downloadData = await getDownloadUrl(photo.photoId);
       if (downloadData.url) {
-        // Create a temporary link to trigger download
         const link = document.createElement("a");
         link.href = downloadData.url;
         link.download = photo.filename;
@@ -56,11 +63,20 @@ export const PhotoCard = memo(function PhotoCard({ photo, onPhotoClick, onViewPh
     }
   }, [photo.photoId, photo.filename]);
 
-  // Handle view click - memoized to prevent unnecessary re-renders
   const handleViewClick = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
     onViewPhoto();
   }, [onViewPhoto]);
+
+  const handleRestore = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+    onRestore();
+  }, [onRestore]);
+
+  const handlePermanentDelete = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+    onPermanentDelete();
+  }, [onPermanentDelete]);
 
   return (
     <Card
@@ -78,17 +94,11 @@ export const PhotoCard = memo(function PhotoCard({ photo, onPhotoClick, onViewPh
             className="object-cover"
             onError={handleImageError}
             loading="lazy"
-            unoptimized // Presigned URLs are already optimized
+            unoptimized
           />
         ) : (
           <div className="flex h-full items-center justify-center">
-            <span className="text-muted-foreground">
-              {photo.status === "PROCESSING" || photo.status === "UPLOADING" 
-                ? "Processing..." 
-                : photo.status === "FAILED"
-                ? "Failed"
-                : "No preview"}
-            </span>
+            <span className="text-muted-foreground">No preview</span>
           </div>
         )}
 
@@ -111,31 +121,56 @@ export const PhotoCard = memo(function PhotoCard({ photo, onPhotoClick, onViewPh
           </div>
         )}
 
-        {/* Status badge */}
-        <div className="absolute top-2 right-2">
-          <Badge
-            variant={
-              photo.status === "COMPLETED"
-                ? "default"
-                : photo.status === "FAILED"
-                ? "destructive"
-                : "secondary"
-            }
-          >
-            {photo.status}
-          </Badge>
-        </div>
+        {/* Deletion warning badge */}
+        {daysUntilDeletion !== null && (
+          <div className="absolute top-2 left-2">
+            <Badge variant={canPermanentDelete ? "destructive" : "secondary"} className="text-xs">
+              {canPermanentDelete ? "Can delete" : `${daysUntilDeletion}d left`}
+            </Badge>
+          </div>
+        )}
       </div>
 
       {/* File info */}
-      <div className="p-3">
+      <div className="p-3 space-y-2">
         <p className="text-sm font-medium truncate" title={photo.filename}>
           {truncate(photo.filename, 30)}
         </p>
-        <div className="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
+        <div className="flex items-center gap-2 text-xs text-muted-foreground">
           <span>{formatFileSize(photo.bytes)}</span>
           <span>•</span>
           <span>{formatRelativeTime(photo.createdAt)}</span>
+        </div>
+        {photo.deletedAt && (
+          <p className="text-xs text-muted-foreground">
+            Deleted {formatRelativeTime(photo.deletedAt)}
+          </p>
+        )}
+        {daysUntilDeletion !== null && !canPermanentDelete && (
+          <p className="text-xs text-orange-500">
+            Will be permanently deleted in {daysUntilDeletion} day{daysUntilDeletion !== 1 ? "s" : ""}
+          </p>
+        )}
+        <div className="flex gap-2 pt-1">
+          <Button
+            variant="outline"
+            size="sm"
+            className="flex-1 text-xs"
+            onClick={handleRestore}
+          >
+            <RotateCcw className="mr-1 h-3 w-3" />
+            Restore
+          </Button>
+          <Button
+            variant="destructive"
+            size="sm"
+            className="flex-1 text-xs"
+            onClick={handlePermanentDelete}
+            disabled={!canPermanentDelete}
+          >
+            <Trash2 className="mr-1 h-3 w-3" />
+            Delete
+          </Button>
         </div>
       </div>
     </Card>

@@ -34,15 +34,7 @@ export interface CreateUploadJobRequest {
 
 export interface CreateUploadJobResponse {
   jobId: string;
-  items: Array<{
-    photoId: string;
-    method: "PUT";
-    presignedUrl: string;
-    multipart?: {
-      uploadId: string;
-      partSize: number;
-    };
-  }>;
+  items: Array<CreateUploadJobResponseItem>;
 }
 
 export interface UpdateProgressRequest {
@@ -74,6 +66,7 @@ export interface PhotoMetadataResponse {
   status: string;
   createdAt: string;
   completedAt?: string;
+  deletedAt?: string;
   tags?: string[];
 }
 
@@ -102,5 +95,36 @@ export interface ProgressUpdate {
   progressPercent: number;
   message?: string;
   timestamp: string;
+}
+
+export interface JobStatusUpdate {
+  jobId: string;
+  status: "QUEUED" | "IN_PROGRESS" | "COMPLETED" | "COMPLETED_WITH_ERRORS" | "FAILED" | "CANCELLED";
+  totalCount: number;
+  completedCount: number;
+  failedCount: number;
+  timestamp: string;
+}
+
+export interface FinalizeMultipartUploadRequest {
+  uploadId: string;
+  parts: Array<{
+    partNumber: number;
+    etag: string;
+  }>;
+}
+
+export interface CreateUploadJobResponseItem {
+  photoId: string;
+  method: "PUT";
+  presignedUrl: string;
+  multipart?: {
+    uploadId: string;
+    partSize: number;
+    partUrls: Array<{
+      partNumber: number;
+      presignedUrl: string;
+    }>;
+  };
 }
 

@@ -1,9 +1,9 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback } from "react";
-import { getPhotos, getPhoto, getDownloadUrl } from "@/lib/api/photos";
+import { getPhotos, getPhoto, getDownloadUrl, getTrashPhotos } from "@/lib/api/photos";
 import { isConnectionError } from "@/lib/utils/errors";
 
-export function usePhotos(params?: { page?: number; size?: number; tag?: string; status?: string }) {
+export function usePhotos(params?: { page?: number; size?: number; tag?: string; status?: string; search?: string }) {
   return useQuery({
     queryKey: ["photos", params],
     queryFn: async () => {
@@ -59,5 +59,31 @@ export function usePrefetchDownloadUrl() {
       staleTime: 14 * 60 * 1000,
     });
   }, [queryClient]);
+}
+
+export function useTrashPhotos(params?: { page?: number; size?: number }) {
+  return useQuery({
+    queryKey: ["trashPhotos", params],
+    queryFn: async () => {
+      try {
+        return await getTrashPhotos(params);
+      } catch (error) {
+        // Re-throw connection errors so they can be handled in the UI
+        if (isConnectionError(error)) {
+          throw error;
+        }
+        // Return empty result for other API errors
+        console.warn("Failed to fetch trash photos:", error);
+        return {
+          items: [],
+          page: params?.page ?? 0,
+          size: params?.size ?? 50,
+          totalElements: 0,
+          totalPages: 0,
+        };
+      }
+    },
+    retry: false,
+  });
 }
 

@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { Plus, Folder, Image, Clock, Trash2, ChevronLeft, ChevronRight } from "lucide-react";
+import { Plus, Folder, Trash2, ChevronLeft, ChevronRight } from "lucide-react";
 import { useUpload } from "@/hooks/useUpload";
 
 interface NavItem {
@@ -16,8 +16,6 @@ interface NavItem {
 
 const navItems: NavItem[] = [
   { label: "My Files", href: "/", icon: Folder },
-  { label: "Photos", href: "/photos", icon: Image },
-  { label: "Recent", href: "/recent", icon: Clock },
   { label: "Trash", href: "/trash", icon: Trash2 },
 ];
 
@@ -114,7 +112,7 @@ export function Sidebar() {
             <div className="text-xs text-muted-foreground">
               <div className="flex justify-between mb-1">
                 <span>Storage</span>
-                <span>136.63 GB / 530.00 GB</span>
+                <span>25.81 GB / 100.00 GB</span>
               </div>
               <div className="h-2 w-full rounded-full bg-muted">
                 <div className="h-2 rounded-full bg-primary" style={{ width: "25.8%" }} />

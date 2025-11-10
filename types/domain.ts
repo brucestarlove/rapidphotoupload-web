@@ -13,6 +13,7 @@ export interface PhotoSummary {
   thumbnailUrl?: string | null; // Presigned thumbnail URL (256px)
   createdAt: string;
   completedAt?: string;
+  deletedAt?: string;
   tags?: string[];
 }
 
@@ -42,6 +43,7 @@ export interface UploadJob {
 export interface UploadFile {
   file: File;
   photoId?: string;
+  jobId?: string;
   status: PhotoStatus;
   progress: number;
   error?: string;

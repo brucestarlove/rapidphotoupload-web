@@ -75,7 +75,7 @@ export function UploadZone() {
           </span>
         </label>
         <p className="mt-2 text-xs text-muted-foreground">
-          Maximum file size: 5MB per file
+          Images larger than 5MB will be automatically handled via multi-part upload
         </p>
       </div>
     </Card>

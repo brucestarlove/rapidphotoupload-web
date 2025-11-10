@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -13,12 +13,40 @@ import {
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useAuth } from "@/hooks/useAuth";
 import { useUpload } from "@/hooks/useUpload";
-import { Grid3x3, List, Upload, Settings, LogOut, User } from "lucide-react";
+import { useUIStore } from "@/stores/uiStore";
+import { Grid3x3, List, Upload, Settings, LogOut, Search, X } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 export function Header() {
   const { user, logout } = useAuth();
   const { uploadFiles } = useUpload();
+  const { viewMode, setViewMode, filters, setSearchQuery } = useUIStore();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [searchInput, setSearchInput] = useState(filters.search || "");
+
+  // Debounce search input (300ms delay)
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setSearchQuery(searchInput || undefined);
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [searchInput, setSearchQuery]);
+
+  // Sync search input with filter state when filter changes externally
+  useEffect(() => {
+    if (filters.search !== searchInput) {
+      // Use setTimeout to avoid synchronous setState in effect
+      setTimeout(() => {
+        setSearchInput(filters.search || "");
+      }, 0);
+    }
+  }, [filters.search]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const handleSearchClear = useCallback(() => {
+    setSearchInput("");
+    setSearchQuery(undefined);
+  }, [setSearchQuery]);
 
   const handleUploadClick = () => {
     fileInputRef.current?.click();
@@ -42,12 +70,27 @@ export function Header() {
 
         {/* Search bar */}
         <div className="flex-1 max-w-2xl px-8">
-          <Input
-            type="search"
-            placeholder="Search files..."
-            className="w-full"
-            disabled // Placeholder for Phase 3
-          />
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              type="search"
+              placeholder="Search files..."
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              className="w-full pl-9 pr-9"
+            />
+            {searchInput && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="absolute right-1 top-1/2 -translate-y-1/2 h-6 w-6"
+                onClick={handleSearchClear}
+                aria-label="Clear search"
+              >
+                <X className="h-3 w-3" />
+              </Button>
+            )}
+          </div>
         </div>
 
         {/* Action icons */}
@@ -60,10 +103,22 @@ export function Header() {
             onChange={handleFileChange}
             className="hidden"
           />
-          <Button variant="ghost" size="icon" title="Grid view">
+          <Button
+            variant="ghost"
+            size="icon"
+            title="Grid view"
+            onClick={() => setViewMode("grid")}
+            className={cn(viewMode === "grid" && "bg-muted")}
+          >
             <Grid3x3 className="h-5 w-5" />
           </Button>
-          <Button variant="ghost" size="icon" title="List view">
+          <Button
+            variant="ghost"
+            size="icon"
+            title="List view"
+            onClick={() => setViewMode("list")}
+            className={cn(viewMode === "list" && "bg-muted")}
+          >
             <List className="h-5 w-5" />
           </Button>
           <Button variant="ghost" size="icon" title="Upload" onClick={handleUploadClick}>
@@ -96,10 +151,6 @@ export function Header() {
                 </div>
               </div>
               <DropdownMenuSeparator />
-              <DropdownMenuItem>
-                <User className="mr-2 h-4 w-4" />
-                Profile
-              </DropdownMenuItem>
               <DropdownMenuItem>
                 <Settings className="mr-2 h-4 w-4" />
                 Settings
