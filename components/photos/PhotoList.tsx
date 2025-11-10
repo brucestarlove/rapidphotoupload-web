@@ -8,7 +8,6 @@ import { JobStatusBadge } from "@/components/progress/JobStatusBadge";
 import { UploadZoneCompact } from "@/components/upload/UploadZoneCompact";
 import { Button } from "@/components/ui/button";
 import { ArrowUpDown, ArrowUp, ArrowDown, Eye, Download } from "lucide-react";
-import { cn } from "@/lib/utils";
 import type { PhotoSummary } from "@/types/domain";
 
 interface PhotoListProps {

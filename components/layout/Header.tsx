@@ -14,7 +14,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useAuth } from "@/hooks/useAuth";
 import { useUpload } from "@/hooks/useUpload";
 import { useUIStore } from "@/stores/uiStore";
-import { Grid3x3, List, Upload, Settings, LogOut, User, Search, X } from "lucide-react";
+import { Grid3x3, List, Upload, Settings, LogOut, Search, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export function Header() {
@@ -36,7 +36,10 @@ export function Header() {
   // Sync search input with filter state when filter changes externally
   useEffect(() => {
     if (filters.search !== searchInput) {
-      setSearchInput(filters.search || "");
+      // Use setTimeout to avoid synchronous setState in effect
+      setTimeout(() => {
+        setSearchInput(filters.search || "");
+      }, 0);
     }
   }, [filters.search]); // eslint-disable-line react-hooks/exhaustive-deps
 

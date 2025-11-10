@@ -98,7 +98,7 @@ export interface ProgressUpdate {
 
 export interface JobStatusUpdate {
   jobId: string;
-  status: "QUEUED" | "IN_PROGRESS" | "COMPLETED" | "FAILED" | "CANCELLED";
+  status: "QUEUED" | "IN_PROGRESS" | "COMPLETED" | "COMPLETED_WITH_ERRORS" | "FAILED" | "CANCELLED";
   totalCount: number;
   completedCount: number;
   failedCount: number;

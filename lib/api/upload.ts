@@ -34,7 +34,7 @@ export async function finalizeMultipartUpload(
   photoId: string,
   data: FinalizeMultipartUploadRequest
 ): Promise<void> {
-  const response = await apiClient.post(`/commands/upload/${photoId}/finalize`, data);
+  await apiClient.post(`/commands/upload/${photoId}/finalize`, data);
   // Backend returns 204 No Content, so no data to return
   return;
 }

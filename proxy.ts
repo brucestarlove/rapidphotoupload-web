@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
-export function proxy(request: NextRequest) {
+export function proxy(_request: NextRequest) {
   // Since we're using localStorage (client-side), proxy can't check auth
   // Client-side components will handle redirects
   // This proxy is kept for future cookie-based auth or other server-side checks

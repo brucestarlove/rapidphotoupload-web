@@ -1,7 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Trash2, RotateCcw, X } from "lucide-react";
+import { Trash2, X } from "lucide-react";
 
 interface UploadActionsProps {
   onClearCompleted?: () => void;

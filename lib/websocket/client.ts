@@ -44,8 +44,21 @@ class WebSocketClient {
     return new Promise((resolve, reject) => {
       this.isConnecting = true;
 
-      // Create SockJS connection
-      const socket = new SockJS(WS_URL);
+      // Get auth token for STOMP CONNECT headers
+      const getAuthToken = () => {
+        if (typeof window !== "undefined") {
+          return localStorage.getItem("auth_token");
+        }
+        return null;
+      };
+
+      const token = getAuthToken();
+      
+      // Create SockJS connection without credentials to avoid CORS issues
+      // Auth will be passed via STOMP CONNECT headers instead
+      const socket = new SockJS(WS_URL, undefined, {
+        transports: ["websocket", "xhr-streaming", "xhr-polling"],
+      });
       
       // Create STOMP client over SockJS
       this.client = new Client({
@@ -53,21 +66,14 @@ class WebSocketClient {
         reconnectDelay: 0, // We handle reconnection manually
         heartbeatIncoming: 4000,
         heartbeatOutgoing: 4000,
+        // Pass auth token in STOMP CONNECT frame headers (not HTTP headers)
+        connectHeaders: token ? { Authorization: `Bearer ${token}` } : {},
         debug: (str) => {
           if (process.env.NODE_ENV === "development") {
             console.log("[STOMP]", str);
           }
         },
       });
-
-      // Get auth token for connection headers
-      const getAuthHeaders = () => {
-        if (typeof window !== "undefined") {
-          const token = localStorage.getItem("auth_token");
-          return token ? { Authorization: `Bearer ${token}` } : {};
-        }
-        return {};
-      };
 
       // Handle successful connection
       this.client.onConnect = () => {

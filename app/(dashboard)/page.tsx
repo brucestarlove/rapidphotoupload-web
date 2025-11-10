@@ -15,7 +15,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { AlertCircle, Filter, X } from "lucide-react";
 import { isConnectionError } from "@/lib/utils/errors";
 import { Button } from "@/components/ui/button";
-import { isAfter, isBefore, parseISO, isEqual, isWithinInterval } from "date-fns";
+import { parseISO, isWithinInterval } from "date-fns";
 import type { PhotoSummary } from "@/types/domain";
 
 export default function DashboardPage() {
@@ -119,6 +119,15 @@ export default function DashboardPage() {
 
     let result = [...loadedPhotos];
 
+    // Filter by search query (client-side, as fallback/enhancement)
+    if (filters.search) {
+      const searchLower = filters.search.toLowerCase();
+      result = result.filter((photo) => {
+        // Search in filename
+        return photo.filename.toLowerCase().includes(searchLower);
+      });
+    }
+
     // Filter by date range (client-side)
     if (filters.dateRange) {
       const startDate = parseISO(filters.dateRange.start);
@@ -143,7 +152,7 @@ export default function DashboardPage() {
     }
 
     return result;
-  }, [loadedPhotos, filters.dateRange, filters.tags]);
+  }, [loadedPhotos, filters.dateRange, filters.tags, filters.search]);
 
   const handleLoadMore = useCallback(() => {
     setCurrentPage((prev) => prev + 1);

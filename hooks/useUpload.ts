@@ -76,11 +76,9 @@ export function useUpload() {
     addJob,
     concurrencyLimit,
     isPaused,
-    activeUploads,
   } = useUploadStore();
   
   const activeUploadCountRef = useRef(0);
-  const uploadQueueRef = useRef<Array<() => Promise<void>>>([]);
 
   // Handle WebSocket progress updates
   const handleProgressUpdate = useCallback((update: ProgressUpdate) => {
@@ -90,7 +88,7 @@ export function useUpload() {
     }
   }, [updateFileProgress, updateFileStatus]);
 
-  const handleJobStatusUpdate = useCallback((update: JobStatusUpdate) => {
+  const handleJobStatusUpdate = useCallback((_update: JobStatusUpdate) => {
     // Job-level updates can be used for batch summary
     // Individual file updates come via ProgressUpdate
   }, []);
@@ -164,7 +162,7 @@ export function useUpload() {
   const uploadSingleFile = async (
     file: File,
     item: CreateUploadJobResponseItem,
-    jobId: string
+    _jobId: string
   ) => {
     // Wait if paused
     while (isPaused) {

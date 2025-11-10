@@ -8,9 +8,8 @@ import { BatchSummary } from "@/components/progress/BatchSummary";
 import { UploadActions } from "@/components/progress/UploadActions";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Minus, Maximize2, X } from "lucide-react";
+import { Minus, Maximize2 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import type { PhotoStatus } from "@/types/domain";
 
 export function UploadProgressPanel() {
   const {
@@ -51,16 +50,17 @@ export function UploadProgressPanel() {
     }
   }, [uploads, selectedTab, getUploadsByStatus]);
 
-  // Calculate counts
+  // Calculate counts - depend on uploads Map so it updates when uploads change
   const counts = useMemo(() => {
     const all = getTotalCount();
     const active = getActiveUploads().length;
     const completed = getCompletedCount();
     const failed = getFailedCount();
     return { all, active, completed, failed };
-  }, [getTotalCount, getActiveUploads, getCompletedCount, getFailedCount]);
-
-  const overallProgress = getOverallProgress();
+  }, [uploads, getTotalCount, getActiveUploads, getCompletedCount, getFailedCount]);
+  
+  // Recalculate overallProgress when uploads change
+  const overallProgress = useMemo(() => getOverallProgress(), [uploads, getOverallProgress]);
 
   // Handle drag start
   const handleMouseDown = useCallback((e: React.MouseEvent) => {

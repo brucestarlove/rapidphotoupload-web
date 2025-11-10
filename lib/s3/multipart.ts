@@ -12,8 +12,6 @@ export interface PartUploadResult {
   etag: string;
 }
 
-const DEFAULT_PART_SIZE = 8 * 1024 * 1024; // 8MB (matches backend default)
-
 /**
  * Upload a single part to S3 using presigned URL
  */
@@ -134,7 +132,6 @@ export async function uploadMultipartToS3(
         presignedUrl,
         (loaded, total) => {
           // Calculate overall progress
-          const partProgress = (loaded / total) * 100;
           const partSize = chunk.size;
           const uploadedInPart = (loaded / total) * partSize;
           const overallProgress = ((totalUploaded + uploadedInPart) / totalSize) * 100;

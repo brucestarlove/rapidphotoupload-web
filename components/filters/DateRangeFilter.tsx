@@ -10,8 +10,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
-import { Calendar } from "lucide-react";
-import { format, subDays, startOfYear, endOfDay, startOfDay, addDays } from "date-fns";
+import { format, subDays, startOfYear, startOfDay, addDays } from "date-fns";
 
 interface DateRangeFilterProps {
   value?: { start: string; end: string };

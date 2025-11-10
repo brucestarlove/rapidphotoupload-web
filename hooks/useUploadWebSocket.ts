@@ -24,19 +24,24 @@ export function useUploadWebSocket() {
   const handleJobStatusUpdate = useCallback((update: JobStatusUpdate) => {
     console.log("[useUploadWebSocket] Received JobStatusUpdate:", update);
     
-    // When job completes, update all photos in the job to COMPLETED status
-    if (update.status === "COMPLETED") {
+    // When job completes (with or without errors), update photos and refresh the list
+    if (update.status === "COMPLETED" || update.status === "COMPLETED_WITH_ERRORS") {
       console.log("[useUploadWebSocket] Job completed, updating photos for job:", update.jobId);
-      const { getJobPhotoIds, updateFileStatus, updateFileProgress } = useUploadStore.getState();
+      const { getJobPhotoIds, updateFileStatus, updateFileProgress, uploads } = useUploadStore.getState();
       const photoIds = getJobPhotoIds(update.jobId);
       
       console.log("[useUploadWebSocket] Found photoIds:", photoIds);
       
-      // Update all photos in this job to COMPLETED status with 100% progress
+      // Update photos that are still in PROCESSING status to COMPLETED
+      // (Failed photos should already be marked as FAILED from individual ProgressUpdate messages)
       photoIds.forEach((photoId) => {
-        console.log("[useUploadWebSocket] Updating photo:", photoId, "to COMPLETED");
-        updateFileProgress(photoId, 100);
-        updateFileStatus(photoId, "COMPLETED");
+        const upload = uploads.get(photoId);
+        // Only update if still processing (not already failed or cancelled)
+        if (upload && (upload.status === "PROCESSING" || upload.status === "UPLOADING")) {
+          console.log("[useUploadWebSocket] Updating photo:", photoId, "to COMPLETED");
+          updateFileProgress(photoId, 100);
+          updateFileStatus(photoId, "COMPLETED");
+        }
       });
       
       // Invalidate photos query to refresh the list

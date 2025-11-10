@@ -23,7 +23,10 @@ export default function DashboardLayout({
 
   useEffect(() => {
     checkAuth();
-    setIsChecking(false);
+    // Use setTimeout to avoid synchronous setState in effect
+    setTimeout(() => {
+      setIsChecking(false);
+    }, 0);
   }, [checkAuth]);
 
   useEffect(() => {

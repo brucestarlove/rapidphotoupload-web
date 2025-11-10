@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import type { User } from "@/types/domain";
-import { getToken, isAuthenticated } from "@/lib/api/auth";
+import { isAuthenticated } from "@/lib/api/auth";
 
 interface AuthState {
   user: User | null;
@@ -10,7 +10,7 @@ interface AuthState {
   logout: () => void;
 }
 
-export const useAuthStore = create<AuthState>((set, get) => ({
+export const useAuthStore = create<AuthState>((set) => ({
   user: null,
   isAuthenticated: false,
   setUser: (user) => {
@@ -35,7 +35,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
             const user = JSON.parse(storedUser);
             set({ user, isAuthenticated: true });
             return;
-          } catch (e) {
+          } catch {
             // Invalid stored user, clear it
             localStorage.removeItem("auth_user");
           }

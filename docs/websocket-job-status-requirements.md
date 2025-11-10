@@ -6,6 +6,41 @@ When a photo upload job completes, the frontend upload progress panel shows "PRO
 ## Root Cause
 The frontend expects a `JobStatusUpdate` WebSocket message when a job completes, but this message may not be sent or may be in an incorrect format.
 
+## CORS Configuration Required
+
+**IMPORTANT**: The WebSocket endpoint (`/ws`) must be configured to allow CORS with credentials:
+
+```java
+// Spring WebSocket CORS configuration
+@Configuration
+@EnableWebSocketMessageBroker
+public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
+    
+    @Override
+    public void configureMessageBroker(MessageBrokerRegistry config) {
+        config.enableSimpleBroker("/topic");
+        config.setApplicationDestinationPrefixes("/app");
+    }
+    
+    @Override
+    public void registerStompEndpoints(StompEndpointRegistry registry) {
+        registry.addEndpoint("/ws")
+            .setAllowedOriginPatterns("*") // Or specific origins like "http://localhost:3000"
+            .withSockJS();
+    }
+    
+    @Override
+    public void configureClientInboundChannel(ChannelRegistration registration) {
+        // Configure for auth headers in STOMP CONNECT frame
+    }
+}
+```
+
+**Key CORS Requirements**:
+- The `/ws/info` endpoint (used by SockJS for negotiation) must return `Access-Control-Allow-Credentials: true` header
+- The `/ws` endpoint must allow the frontend origin (e.g., `http://localhost:3000`)
+- Auth is passed via STOMP CONNECT headers (`Authorization: Bearer <token>`), not HTTP cookies
+
 ## Required WebSocket Message Format
 
 ### Topic

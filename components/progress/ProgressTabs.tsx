@@ -2,7 +2,6 @@
 
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import type { PhotoStatus } from "@/types/domain";
 
 export type ProgressTab = "all" | "active" | "completed" | "failed";
 

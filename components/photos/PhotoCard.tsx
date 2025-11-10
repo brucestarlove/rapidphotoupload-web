@@ -6,7 +6,6 @@ import type { PhotoSummary } from "@/types/domain";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { formatFileSize, formatRelativeTime, truncate } from "@/lib/utils/format";
-import { cn } from "@/lib/utils";
 import { Eye, Download } from "lucide-react";
 import { usePrefetchDownloadUrl } from "@/hooks/usePhotos";
 
