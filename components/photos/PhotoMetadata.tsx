@@ -7,12 +7,23 @@ import { JobStatusBadge } from "@/components/progress/JobStatusBadge";
 import { TagList } from "./TagList";
 import { TagInput } from "./TagInput";
 import { formatFileSize, formatDate } from "@/lib/utils/format";
-import { ChevronRight, Info } from "lucide-react";
+import { ChevronRight, Info, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ExifData } from "./ExifData";
 import { addTag, removeTag, getTags } from "@/lib/api/tags";
+import { deletePhoto } from "@/lib/api/photos";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import type { PhotoMetadataResponse } from "@/types/api";
 
 interface PhotoMetadataProps {
@@ -24,6 +35,7 @@ interface PhotoMetadataProps {
 export function PhotoMetadata({ photo, isOpen, onToggle }: PhotoMetadataProps) {
   const queryClient = useQueryClient();
   const [isEditingTags, setIsEditingTags] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
   // Fetch available tags for autocomplete
   const { data: availableTags = [] } = useQuery({
@@ -57,6 +69,22 @@ export function PhotoMetadata({ photo, isOpen, onToggle }: PhotoMetadataProps) {
     },
     onError: (error: Error) => {
       toast.error(`Failed to remove tag: ${error.message}`);
+    },
+  });
+
+  // Delete photo mutation
+  const deletePhotoMutation = useMutation({
+    mutationFn: (photoId: string) => deletePhoto(photoId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["photo", photo?.photoId] });
+      queryClient.invalidateQueries({ queryKey: ["photos"] });
+      queryClient.invalidateQueries({ queryKey: ["trashPhotos"] });
+      toast.success("Photo moved to Trash");
+      setShowDeleteDialog(false);
+      onToggle(); // Close metadata panel
+    },
+    onError: (error: Error) => {
+      toast.error(`Failed to delete photo: ${error.message}`);
     },
   });
 
@@ -226,8 +254,48 @@ export function PhotoMetadata({ photo, isOpen, onToggle }: PhotoMetadataProps) {
 
           {/* EXIF Data */}
           <ExifData photo={photo} />
+
+          <Separator />
+
+          {/* Delete Button */}
+          <div className="pt-2">
+            <Button
+              variant="destructive"
+              className="w-full"
+              onClick={() => setShowDeleteDialog(true)}
+              disabled={deletePhotoMutation.isPending}
+            >
+              <Trash2 className="mr-2 h-4 w-4" />
+              Delete Photo
+            </Button>
+          </div>
         </div>
       </div>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Photo</AlertDialogTitle>
+            <AlertDialogDescription>
+              This photo will be moved to Trash and permanently deleted in 7 days. You can restore it from Trash before then.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (photo) {
+                  deletePhotoMutation.mutate(photo.photoId);
+                }
+              }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Backdrop */}
       {isOpen && (

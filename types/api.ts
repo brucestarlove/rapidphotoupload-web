@@ -66,6 +66,7 @@ export interface PhotoMetadataResponse {
   status: string;
   createdAt: string;
   completedAt?: string;
+  deletedAt?: string;
   tags?: string[];
 }
 

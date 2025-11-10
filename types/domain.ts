@@ -13,6 +13,7 @@ export interface PhotoSummary {
   thumbnailUrl?: string | null; // Presigned thumbnail URL (256px)
   createdAt: string;
   completedAt?: string;
+  deletedAt?: string;
   tags?: string[];
 }
 

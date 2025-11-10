@@ -44,3 +44,48 @@ export async function getDownloadUrl(photoId: string): Promise<DownloadUrlRespon
   return response.data;
 }
 
+/**
+ * Soft delete a photo (moves to trash)
+ */
+export async function deletePhoto(photoId: string): Promise<void> {
+  await apiClient.delete(`/commands/photos/${photoId}`);
+}
+
+/**
+ * Restore a photo from trash
+ */
+export async function restorePhoto(photoId: string): Promise<void> {
+  await apiClient.post(`/commands/photos/${photoId}/restore`);
+}
+
+/**
+ * Permanently delete a photo (only if deleted >7 days ago)
+ */
+export async function permanentDeletePhoto(photoId: string): Promise<void> {
+  await apiClient.delete(`/commands/photos/${photoId}/permanent`);
+}
+
+/**
+ * Get photos from trash
+ */
+export async function getTrashPhotos(params?: {
+  page?: number;
+  size?: number;
+}): Promise<PhotoListResponse> {
+  const response = await apiClient.get<PhotoListResponse>("/queries/photos/trash", {
+    params: {
+      page: params?.page ?? 0,
+      size: params?.size ?? 50,
+    },
+  });
+  // Ensure response has the expected structure
+  const data = response.data;
+  return {
+    items: data?.items || [],
+    page: data?.page ?? 0,
+    size: data?.size ?? 50,
+    totalElements: data?.totalElements ?? 0,
+    totalPages: data?.totalPages ?? 0,
+  };
+}
+
