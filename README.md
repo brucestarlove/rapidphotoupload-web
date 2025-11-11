@@ -42,13 +42,15 @@ The easiest way to deploy your Next.js app is to use the [Vercel Platform](https
 
 Before deploying, configure these environment variables in your Vercel project settings:
 
-- `NEXT_PUBLIC_API_URL`: Your EC2 server API endpoint
-  - Example: `https://your-ec2-server.com:8080` (use HTTPS if available)
-  - Or: `http://your-ec2-ip:8080` (if using IP address)
+- `NEXT_PUBLIC_API_URL`: Your EC2 server API endpoint (must be HTTPS for production)
+  - Example: `https://your-ec2-server.com:8080` or `https://your-ec2-domain.com`
+  - **Important**: Must use HTTPS (not HTTP) when deployed to Vercel
+  - For development: `http://localhost:8080` is fine
   
-- `NEXT_PUBLIC_WS_URL`: Your EC2 server WebSocket endpoint
-  - Example: `wss://your-ec2-server.com:8080/ws` (use WSS if HTTPS is available)
-  - Or: `ws://your-ec2-ip:8080/ws` (if using IP address)
+- `NEXT_PUBLIC_WS_URL`: (Optional) Your EC2 server WebSocket endpoint
+  - Example: `wss://your-ec2-server.com:8080/ws` or `wss://your-ec2-domain.com/ws`
+  - If not set, will be derived from `NEXT_PUBLIC_API_URL` (replacing `https://` with `wss://`)
+  - **Important**: Must use WSS (not WS) when deployed to Vercel
 
 ### Deployment Steps
 
@@ -67,17 +69,59 @@ Before deploying, configure these environment variables in your Vercel project s
 
 4. **Deploy**: Vercel will automatically deploy on every push to your main branch
 
+### Backend HTTPS Setup
+
+Your EC2 backend **must** be served over HTTPS for production. Here are common approaches:
+
+1. **Using a Reverse Proxy (Recommended)**:
+   - Set up Nginx or Apache as a reverse proxy with SSL certificates
+   - Use Let's Encrypt for free SSL certificates
+   - Example Nginx config:
+     ```nginx
+     server {
+         listen 443 ssl;
+         server_name your-domain.com;
+         
+         ssl_certificate /path/to/cert.pem;
+         ssl_certificate_key /path/to/key.pem;
+         
+         location / {
+             proxy_pass http://localhost:8080;
+             proxy_http_version 1.1;
+             proxy_set_header Upgrade $http_upgrade;
+             proxy_set_header Connection "upgrade";
+         }
+     }
+     ```
+
+2. **Using AWS Application Load Balancer**:
+   - Create an ALB with SSL certificate (ACM)
+   - Point it to your EC2 instance
+   - Use the ALB DNS name as your API URL
+
+3. **Using Cloudflare Tunnel**:
+   - Set up Cloudflare Tunnel on your EC2 instance
+   - Provides HTTPS automatically without exposing ports
+
 ### Important Notes
 
-- **HTTPS/WSS**: If your EC2 server has SSL certificates, use `https://` and `wss://` protocols
+- **HTTPS Required**: Backend must use HTTPS (not HTTP) when frontend is served over HTTPS
 - **CORS**: Ensure your EC2 backend allows requests from `https://your-vercel-app.vercel.app`
-- **Security Groups**: Make sure your EC2 security group allows inbound traffic on ports 8080 (or your API port)
+- **Security Groups**: Make sure your EC2 security group allows inbound traffic on ports 443 (HTTPS) and 8080 (if using reverse proxy)
 - **Mobile Folder**: The `mobile/` directory is excluded from Vercel builds automatically (it's a separate React Native app)
 
 ### Troubleshooting
 
-- If WebSocket connections fail, check that your EC2 server supports WebSocket upgrades
-- If API calls fail, verify CORS settings on your EC2 server
-- Check Vercel build logs for any environment variable issues
+- **Mixed Content Errors**: If you see "Mixed Content" errors, ensure your backend is using HTTPS, not HTTP
+- **WebSocket Connection Failures**: 
+  - Verify your backend supports WebSocket upgrades (STOMP over SockJS)
+  - Ensure you're using `wss://` (not `ws://`) in production
+  - Check that your reverse proxy (if using one) supports WebSocket upgrades
+- **CORS Errors**: Ensure your EC2 backend allows requests from your Vercel domain
+- **API Connection Failures**: 
+  - Verify `NEXT_PUBLIC_API_URL` is set correctly in Vercel
+  - Check that your EC2 security group allows inbound traffic
+  - Test the backend URL directly in a browser/Postman
+- **Build Issues**: Check Vercel build logs for any environment variable issues
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.

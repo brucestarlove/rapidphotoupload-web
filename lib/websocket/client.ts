@@ -10,10 +10,27 @@ function normalizeWebSocketUrl(url: string): string {
   return url.replace(/^ws:\/\//, "http://").replace(/^wss:\/\//, "https://");
 }
 
-// Get WebSocket URL from environment variable and normalize it
-const WS_URL = normalizeWebSocketUrl(
-  process.env.NEXT_PUBLIC_WS_URL || "ws://localhost:8080/ws"
-);
+/**
+ * Get WebSocket URL from environment variable
+ * Backend should be served over HTTPS (WSS) for production
+ */
+function getWebSocketUrl(): string {
+  // Use explicit WS_URL if provided, otherwise derive from API_URL
+  const wsUrl = process.env.NEXT_PUBLIC_WS_URL;
+  if (wsUrl) {
+    return normalizeWebSocketUrl(wsUrl);
+  }
+  
+  // Derive from API_URL (replace http with ws, https with wss)
+  const backendUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
+  const wsBaseUrl = backendUrl
+    .replace(/^https:\/\//, "wss://")
+    .replace(/^http:\/\//, "ws://");
+  
+  return normalizeWebSocketUrl(`${wsBaseUrl}/ws`);
+}
+
+const WS_URL = getWebSocketUrl();
 
 export interface WebSocketMessage {
   type: "ProgressUpdate" | "JobStatusUpdate";
