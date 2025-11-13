@@ -94,24 +94,6 @@ export interface JobStatusResponse {
   updatedAt: string;
 }
 
-export interface ProgressUpdate {
-  jobId: string;
-  photoId: string;
-  status: string;
-  progressPercent: number;
-  message?: string;
-  timestamp: string;
-}
-
-export interface JobStatusUpdate {
-  jobId: string;
-  status: "QUEUED" | "IN_PROGRESS" | "COMPLETED" | "COMPLETED_WITH_ERRORS" | "FAILED" | "CANCELLED";
-  totalCount: number;
-  completedCount: number;
-  failedCount: number;
-  timestamp: string;
-}
-
 export interface FinalizeMultipartUploadRequest {
   uploadId: string;
   parts: Array<{

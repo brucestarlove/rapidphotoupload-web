@@ -62,6 +62,9 @@ export function UploadProgressPanel() {
   // Recalculate overallProgress when uploads change
   const overallProgress = useMemo(() => getOverallProgress(), [uploads, getOverallProgress]);
 
+  // Get total count for reactivity - use getTotalCount() to ensure Zustand detects changes
+  const totalCount = useMemo(() => getTotalCount(), [uploads, getTotalCount]);
+
   // Handle drag start
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
     if ((e.target as HTMLElement).closest("button")) return;
@@ -81,7 +84,7 @@ export function UploadProgressPanel() {
       const newY = e.clientY - dragStart.y;
       
       // Constrain to viewport
-      const maxX = window.innerWidth - 400; // panel width
+      const maxX = window.innerWidth - 550; // panel width
       const maxY = window.innerHeight - (isMinimized ? 60 : 600); // panel height
       
       setPosition({
@@ -103,15 +106,15 @@ export function UploadProgressPanel() {
     };
   }, [isDragging, dragStart, isMinimized]);
 
-  // Don't show panel if no uploads
-  if (uploads.size === 0) {
+  // Don't show panel if no uploads - use totalCount for better reactivity
+  if (totalCount === 0) {
     return null;
   }
 
   return (
     <Card
       className={cn(
-        "fixed bottom-4 right-4 z-50 w-[400px] shadow-lg transition-all",
+        "fixed bottom-4 right-4 z-50 w-[550px] shadow-lg transition-all",
         isMinimized ? "h-auto" : "max-h-[600px]"
       )}
       style={{
@@ -166,7 +169,13 @@ export function UploadProgressPanel() {
           </div>
 
           {/* Upload List */}
-          <div className="max-h-[300px] space-y-2 overflow-y-auto p-4">
+          <div 
+            className="max-h-[300px] space-y-2 overflow-y-auto overflow-x-hidden p-4 upload-list-scrollbar"
+            style={{
+              scrollbarWidth: 'thin',
+              scrollbarColor: '#8b5cf6 transparent',
+            }}
+          >
             {filteredUploads.length === 0 ? (
               <p className="py-8 text-center text-sm text-muted-foreground">
                 {selectedTab === "all" ? "No uploads" : `No ${selectedTab} uploads`}
