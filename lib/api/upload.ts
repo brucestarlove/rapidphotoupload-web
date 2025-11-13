@@ -40,7 +40,7 @@ export async function finalizeMultipartUpload(
 }
 
 /**
- * Get job status (for polling fallback)
+ * Get job status (for polling)
  */
 export async function getJobStatus(jobId: string): Promise<JobStatusResponse> {
   const response = await apiClient.get<JobStatusResponse>(`/queries/upload-jobs/${jobId}`);

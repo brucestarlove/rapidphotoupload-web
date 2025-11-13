@@ -18,7 +18,7 @@ export default function DashboardLayout({
   const router = useRouter();
   const [isChecking, setIsChecking] = useState(true);
   
-  // Manage WebSocket subscriptions for upload jobs
+  // Manage polling for upload job status updates
   useUploadWebSocket();
 
   useEffect(() => {

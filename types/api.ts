@@ -75,17 +75,23 @@ export interface DownloadUrlResponse {
   expiresAt: string;
 }
 
+export interface PhotoStatusItem {
+  photoId: string;
+  filename: string;
+  status: string;
+  errorMessage?: string;
+}
+
 export interface JobStatusResponse {
   jobId: string;
   status: "QUEUED" | "IN_PROGRESS" | "COMPLETED" | "FAILED" | "CANCELLED";
   totalCount: number;
   completedCount: number;
   failedCount: number;
-  items: Array<{
-    photoId: string;
-    status: string;
-    progressPercent: number;
-  }>;
+  cancelledCount: number;
+  photos: PhotoStatusItem[];
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface ProgressUpdate {
