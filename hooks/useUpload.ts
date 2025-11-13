@@ -3,7 +3,7 @@ import { useUploadStore } from "@/stores/uploadStore";
 import { createUploadJob, updateProgress, finalizeMultipartUpload } from "@/lib/api/upload";
 import { uploadToS3, uploadMultipartToS3 } from "@/lib/s3/multipart";
 import { toast } from "sonner";
-import type { ProgressUpdate, JobStatusUpdate, CreateUploadJobResponseItem } from "@/types/api";
+import type { CreateUploadJobResponseItem } from "@/types/api";
 
 const MULTIPART_THRESHOLD = 5 * 1024 * 1024; // 5MB - files larger than this use multipart
 const PROGRESS_THROTTLE_MS = 16; // ~60fps
@@ -80,19 +80,6 @@ export function useUpload() {
   
   const activeUploadCountRef = useRef(0);
 
-  // Handle WebSocket progress updates
-  const handleProgressUpdate = useCallback((update: ProgressUpdate) => {
-    if (update.photoId) {
-      updateFileProgress(update.photoId, update.progressPercent);
-      updateFileStatus(update.photoId, update.status as any);
-    }
-  }, [updateFileProgress, updateFileStatus]);
-
-  const handleJobStatusUpdate = useCallback((_update: JobStatusUpdate) => {
-    // Job-level updates can be used for batch summary
-    // Individual file updates come via ProgressUpdate
-  }, []);
-
   const uploadFiles = useCallback(
     async (files: File[]) => {
       try {
@@ -136,8 +123,8 @@ export function useUpload() {
           addUpload(item.photoId, file, jobId);
         }
 
-        // Subscribe to WebSocket for real-time updates
-        // Note: WebSocket subscription is handled by the component using useWebSocket hook
+        // Job status updates are handled via polling in useUploadWebSocket hook
+        // The hook automatically polls all active jobs every 1.5 seconds
 
         // Upload files with concurrency control
         const uploadPromises = items.map((item, index) => {
@@ -210,12 +197,12 @@ export function useUpload() {
         });
         
         updateFileProgress(item.photoId, 100);
-        updateFileStatus(item.photoId, "PROCESSING"); // Backend will update to COMPLETED via WebSocket
+        updateFileStatus(item.photoId, "PROCESSING"); // Backend will update to COMPLETED via polling
       } else {
         // Single PUT upload
         await uploadToS3(file, item.presignedUrl, throttledProgress);
         updateFileProgress(item.photoId, 100);
-        updateFileStatus(item.photoId, "PROCESSING"); // Backend will update to COMPLETED via WebSocket
+        updateFileStatus(item.photoId, "PROCESSING"); // Backend will update to COMPLETED via polling
       }
     } catch (error) {
       updateFileStatus(item.photoId, "FAILED");
@@ -267,8 +254,6 @@ export function useUpload() {
 
   return {
     uploadFiles,
-    handleProgressUpdate,
-    handleJobStatusUpdate,
   };
 }
 

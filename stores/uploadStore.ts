@@ -261,8 +261,16 @@ export const useUploadStore = create<UploadState>((set, get) => ({
     const uploads = Array.from(state.uploads.values());
     if (uploads.length === 0) return 0;
     
-    const totalProgress = uploads.reduce((sum, upload) => sum + upload.progress, 0);
-    return Math.round(totalProgress / uploads.length);
+    // Simple calculation: (completed + failed) / total * 100
+    // This represents how many items are "done" (either completed or failed)
+    const completedCount = uploads.filter((u) => u.status === "COMPLETED").length;
+    const failedCount = uploads.filter((u) => u.status === "FAILED").length;
+    const totalCount = uploads.length;
+    
+    // Calculate percentage of completed + failed items
+    const overallProgress = Math.round(((completedCount + failedCount) / totalCount) * 100);
+    
+    return overallProgress;
   },
 }));
 

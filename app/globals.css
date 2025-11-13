@@ -125,4 +125,26 @@
   html {
     color-scheme: dark;
   }
+  
+  /* Custom scrollbar styling for upload progress panel */
+  .upload-list-scrollbar {
+    overflow-y: scroll !important;
+  }
+  
+  .upload-list-scrollbar::-webkit-scrollbar {
+    width: 8px;
+  }
+  
+  .upload-list-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  
+  .upload-list-scrollbar::-webkit-scrollbar-thumb {
+    background-color: #8b5cf6;
+    border-radius: 4px;
+  }
+  
+  .upload-list-scrollbar::-webkit-scrollbar-thumb:hover {
+    background-color: #a78bfa;
+  }
 }

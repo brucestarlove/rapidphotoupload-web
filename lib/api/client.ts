@@ -1,6 +1,7 @@
 import axios, { AxiosInstance, InternalAxiosRequestConfig } from "axios";
 
 // Get API base URL from environment variable
+// Backend should be served over HTTPS for production
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
 
 /**
@@ -38,8 +39,8 @@ apiClient.interceptors.request.use(
 apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
-    // Handle 401 Unauthorized - redirect to login
-    if (error.response?.status === 401) {
+    // Handle 401 Unauthorized or 403 Forbidden - redirect to login
+    if (error.response?.status === 401 || error.response?.status === 403) {
       if (typeof window !== "undefined") {
         localStorage.removeItem("auth_token");
         window.location.href = "/login";
